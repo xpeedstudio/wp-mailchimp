@@ -73,6 +73,41 @@ if (!function_exists('xs_wp_mailchimp_list')) {
         return $xs_list;
     }
 }
+
+/*
+ *
+ * Load Mail List
+ *
+ */
+function xs_load_maillist(){
+    check_ajax_referer('xs_admin_security_check', 'xs_admin_security');
+    if (defined('DOING_AJAX') && DOING_AJAX) {
+        $api_key = wp_mailchimp_get_option('wp_mailchimp_api_key','mailchimp');
+        $list_id = wp_mailchimp_get_option('wp_mailchimp_list','mailchimp');
+        $MailChimp = new MailChimp($api_key);
+        $lists = $MailChimp->get("lists/" . $list_id . "/members");
+        if (isset($lists['status']) && $lists['status'] == 401) {
+        } else {
+            if(is_array($lists) && !empty($lists)){
+                foreach($lists['members'] as $list){
+                    $mail_list = array(
+                        'post_type'             => 'xs_wp_mailchimp',
+                        'post_status'            => 'publish',
+                        'post_title'            =>$list['email_address'],
+                    );
+                    $post_id = wp_insert_post( $mail_list, true );
+                    if ( $post_id && !is_wp_error( $post_id ) ) {
+                        echo 'success';
+                    }else{
+                        echo 'error';
+                    }
+                }
+            }
+        }
+    }
+}
+add_action('wp_ajax_xs_load_maillist', 'xs_load_maillist');
+
 if (!function_exists('wp_mailchimp_notice')) {
     function wp_mailchimp_notice()
     {

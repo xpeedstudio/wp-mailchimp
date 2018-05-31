@@ -31,11 +31,7 @@ if ( !class_exists('Wp_Social_Menu_Settings' ) ):
                     'id'    => 'mailchimp',
                     'title' => __( 'MailChimp API Settings', 'wp-fundraising' )
                 ),
-                array(
-                    'id'    => 'google',
-                    'title' => __( 'Google Plus', 'wp-fundraising' )
-                ),
-
+                
             );
             return $sections;
         }
@@ -60,22 +56,14 @@ if ( !class_exists('Wp_Social_Menu_Settings' ) ):
                         'type'      => 'select',
                         'options'   => xs_wp_mailchimp_list(),
                     ),
+
+                    array(
+
+                        'desc'      => '<input type="button"  class="button button-primary xs-mail-list" value="Load Mail">',
+                        'type'      => 'html',
+                    ),
                 ),
 
-                'google' => array(
-                    array(
-                        'name'  => 'google_client_id',
-                        'label' => esc_html__( 'Client ID', 'wp-fundraising' ),
-                        'desc'  => esc_html__( 'Enter Client ID', 'wp-fundraising' ),
-                        'type'  => 'text'
-                    ),
-                    array(
-                        'name'  => 'google_secret',
-                        'label' => esc_html__( 'Client secret', 'wp-fundraising' ),
-                        'desc'  => esc_html__( 'Enter Client ID', 'wp-fundraising' ),
-                        'type'  => 'text'
-                    ),
-                ),
             );
             return $settings_fields;
         }
@@ -85,37 +73,20 @@ if ( !class_exists('Wp_Social_Menu_Settings' ) ):
         }
 
         function subscribe_list(){
-            $mail_list = new Xs_Subscribe_List_Table();
-            $remove_query_args = array(
-                '_wp_http_referer', '_wpnonce', 'action', 'id', 'env_post', 'action2','env_form_search', 'filter_action'
-            );
+            ?>
+            <div class="wrap">
+                <form method="get">
+                    <input type="hidden" name="page" value="xs-subscribe-list">
+                    <?php
+                    $mail_list = new Xs_Subscribe_List_Table();
+                    $mail_list->prepare_items();
+                    $mail_list->search_box(__('Search Forms', 'wp-mailchimp'), 'wp-mailchimp-search');
+                    $mail_list->display();
+                    ?>
+                </form>
+            </div>
+<?php
 
-            $actions = $mail_list->current_action();
-            $add_query_args = array();
-
-            if($actions){
-                switch ($actions){
-                    case 'unsubscribe':
-                        if ( ! empty( $_GET['id'] ) ) {
-
-                            wp_trash_post( $_GET['id']  );
-
-                            $add_query_args['trashed'] = 1;
-
-                        } else if ( ! empty( $_GET['env_post'] ) ) {
-                            foreach ( $_GET['env_post'] as $post_id ) {
-                                wp_trash_post( $post_id  );
-                            }
-
-                            $add_query_args['trashed'] = count( $_GET['env_post'] );
-                        }
-                        break;
-                }
-            }
-
-            $mail_list->prepare_items();
-            $mail_list->search_box( __( 'Search Forms', 'wpuf' ), 'env-search' );
-            $mail_list->display();
         }
         /**
          * Get all the pages

@@ -73,12 +73,20 @@ class Wp_Mailchimp{
         require_once (plugin_dir_path($this->file). 'admin/setting.php');
         require_once (plugin_dir_path($this->file). 'inc/xs-function.php');
         require_once (plugin_dir_path($this->file). 'public/shortcode.php');
+        add_action( 'init', array($this, 'register_post_type') );
         add_action( 'wp_enqueue_scripts', array( $this, 'xs_enque_script'));
+        add_action( 'admin_enqueue_scripts', array( $this, 'admin_enque_script'));
 
     }
-    public function xs_enque_script(){
-        //wp_enqueue_style('env_bootstrap', plugin_dir_url($this->file) .'assets/css/style.css' );
 
+    public function register_post_type(){
+        register_post_type( 'xs_wp_mailchimp', array(
+            'public'          => false,
+            'show_ui'         => false,
+            'show_in_menu'    => false,
+        ) );
+    }
+    public function xs_enque_script(){
         wp_enqueue_script( 'xs-wp-mailchimp-ajax', plugin_dir_url($this->file) . 'assets/js/main.js', array('jquery'), '', TRUE );
 
         /*Ajax Call*/
@@ -88,6 +96,17 @@ class Wp_Mailchimp{
         );
         wp_localize_script('xs-wp-mailchimp-ajax', 'xs_check_obj', $params);
     }
+
+    public function admin_enque_script(){
+        wp_enqueue_script( 'xs-admin-ajax', plugin_dir_url($this->file) . 'assets/js/admin.js', array('jquery'), '', TRUE );
+
+        $params = array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'ajax_nonce' => wp_create_nonce('xs_admin_security_check'),
+        );
+        wp_localize_script('xs-admin-ajax', 'xs_admin_check_obj', $params);
+    }
+
     public static function xs_get_instance() {
         if (!isset(self::$_instance)) {
             self::$_instance = new Wp_Mailchimp();
